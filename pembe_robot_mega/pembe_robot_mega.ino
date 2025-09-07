@@ -101,17 +101,13 @@ void rastgele()
 {
   if(digitalRead(sol_goz) == 0)
   {
-    geri(200);
-    delay(100);
-    sag(255);
-    delay(300);
+    sag(100);
+    delay(500);
   }
   else if(digitalRead(sag_goz) == 0)
   {
-    geri(200);
-    delay(100);
-    sag(255);
-    delay(600);
+    sag(100);
+    delay(700);
   }
   else
   {

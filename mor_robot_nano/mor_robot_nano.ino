@@ -1,180 +1,125 @@
-#include<Servo.h>
-#include <Adafruit_NeoPixel.h>
+#include <Servo.h>
 
-Servo bizim;
-Servo rakip;
-Servo ceza;
+Servo tokat;  // Servo nesnesi oluştur
+Servo ceza_tokat;
 
-// Sağ motor pinleri
-#define EN_R 2
-#define RPWM_R 3
-#define LPWM_R 4
-
-// Sol motor pinleri
-#define RPWM_L 5
-#define LPWM_L 6
-#define EN_L 7
-
-#define sol_goz 22
-#define sag_goz 24
-
-#define s0 52
-#define s1 50
-#define s2 46
-#define s3 48
-#define out 44
-
-#define rgb 42
-#define LED_COUNT  8      // LED sayısı
-
-Adafruit_NeoPixel strip(LED_COUNT, rgb, NEO_GRB + NEO_KHZ800);
+int out = 2, s0 = 3, s1 = 4, s2 = 5, s3 = 6, top_sensor = 12;
 
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
+boolean ceza_aldik_mi = false;
+
+// TOPLARI TOKATLAYAN VE CEZAYI TOKATLAYAN SERVOLARIN NORMAL DURUMLARI
+// ÖZELLİKLE tokat_default TOKATLAMA KODLARINDA DA KULLANILIYOR, BURADAN DEĞİŞTİRİLMESİ ÖNEMLİ
+byte tokat_default = 90, ceza_tokat_default = 70;
 
 void setup() {
-  // SERVO TANIMLARI
-  bizim.attach(A7);
-  rakip.attach(A8);
-  ceza.attach(A9);
-  bizim.write(180);
-  rakip.write(0);
-  ceza.write(0);
 
-  // MZ80 TANIMLARI
-  pinMode(sol_goz, INPUT);
-  pinMode(sag_goz, INPUT);
+  tokat.attach(10);
+  ceza_tokat.attach(11);
+  tokat.write(tokat_default);
+  ceza_tokat.write(ceza_tokat_default);
 
-  //RENK SENSÖRÜ TANIMLARI
+  pinMode(out, INPUT);
+  pinMode(top_sensor, INPUT);
   pinMode(s0, OUTPUT);
   pinMode(s1, OUTPUT);
   pinMode(s2, OUTPUT);
   pinMode(s3, OUTPUT);
-  pinMode(out, INPUT);
-  
-  // Sağ motor pin tanımları
-  pinMode(EN_R, OUTPUT);
-  pinMode(RPWM_R, OUTPUT);
-  pinMode(LPWM_R, OUTPUT);
-
-  // Sol motor pin tanımları
-  pinMode(EN_L, OUTPUT);
-  pinMode(RPWM_L, OUTPUT);
-  pinMode(LPWM_L, OUTPUT);
-
-  // Motor sürücülerini aktif et
-  digitalWrite(EN_R, HIGH);
-  digitalWrite(EN_L, HIGH);
 
   digitalWrite(s0, HIGH);
   digitalWrite(s1, LOW);
 
-  //NEOPİXEL
-  strip.begin();
-  strip.show(); 
-
-  for (int i = 0; i < LED_COUNT; i++) {
-    strip.setPixelColor(i, strip.Color(255, 0, 0)); // kırmızı
-  }
-  strip.show();
-
   Serial.begin(9600);
-  //basla();
 }
 
 void loop() {
-  rastgele();
-}
+  
+  /* //Bİ SAĞA Bİ SOLA ATAN KOD
+    if(digitalRead(top_sensor)==1)
+    {
+    if(rastgele)
+    {dogru_al();
+    }
+    else
+    {
+    rakip_al();
+    }
+    rastgele=!rastgele;
+    }*/
 
-void goz_okuma()
-{
-  Serial.print("Sol göz: ");
-  Serial.println(digitalRead(sol_goz));
-  Serial.print("Saü göz: ");
-  Serial.println(digitalRead(sag_goz));
-  Serial.print("\n\n\n");
-  delay(300);
-}
+  /* //Bİ SAĞ Bİ SOL TOKATLAMA SERVO TESTİ
+    tokat.write(0);
+    delay(100);
+    tokat.write(90);
+    delay(100);
+    tokat.write(180);
+    delay(100);*/
 
-void rastgele()
-{
-  if(digitalRead(sol_goz) == 0)
+  //NORMAL KOD
+  if (digitalRead(top_sensor) == 1)
   {
-    geri(200);
-    delay(100);
-    sag(255);
-    delay(300);
-  }
-  else if(digitalRead(sag_goz) == 0)
-  {
-    geri(200);
-    delay(100);
-    sag(255);
-    delay(600);
+    int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
+    if (sonuc > 175 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    {
+      Serial.print("KIRMIZI: ");
+      Serial.println(sonuc);
+      dogru_al();
+    }
+    else if (sonuc < 85 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    {
+      Serial.print("MAVİ: ");
+      Serial.println(sonuc);
+      rakip_al();
+    }
+    else if (sonuc > 130 && sonuc < 165 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    {
+      Serial.println("CEZA: ");
+      Serial.println(sonuc);
+      ceza_al();
+      ceza_aldik_mi = true;
+    }
   }
   else
   {
-    ileri(120);
+    //Serial.println("BOŞŞ");
+  }
+
+
+}
+
+void dogru_al() {
+  tokat.write(180);
+  delay(120);
+  tokat.write(tokat_default);
+}
+
+void rakip_al() {
+  tokat.write(0);
+  delay(120);
+  tokat.write(tokat_default);
+}
+
+void ceza_al() {
+  if(!ceza_aldik_mi)
+  {
+    ceza_tokat.write(150);
+    delay(120);
+    tokat.write(180);
+    delay(150);
+    tokat.write(tokat_default);
+    delay(100);
+    ceza_tokat.write(100);
+  }
+  else
+  {
+    rakip_al();
   }
 }
 
-void ileri(byte hiz)
-{
-  analogWrite(RPWM_R, hiz);
-  analogWrite(LPWM_R, 0);
-  analogWrite(RPWM_L, 0);
-  analogWrite(LPWM_L, hiz);
-}
-
-void geri(byte hiz)
-{
-  analogWrite(RPWM_R, 0);
-  analogWrite(LPWM_R, hiz);
-  analogWrite(RPWM_L, hiz);
-  analogWrite(LPWM_L, 0);
-}
-
-void sol(byte hiz)
-{
-  analogWrite(RPWM_R, hiz);
-  analogWrite(LPWM_R, 0);
-  analogWrite(RPWM_L, hiz);
-  analogWrite(LPWM_L, 0);
-}
-
-void sag(byte hiz)
-{
-  analogWrite(RPWM_R, 0);
-  analogWrite(LPWM_R, hiz);
-  analogWrite(RPWM_L, 0);
-  analogWrite(LPWM_L, hiz);
-}
-
-void dur(byte guc)
-{
-  analogWrite(RPWM_R, guc);
-  analogWrite(LPWM_R, guc);
-  analogWrite(RPWM_L, guc);
-  analogWrite(LPWM_L, guc);
-}
-
-void basla()
-{
-  // İLERİ GİT (her iki motor ileri yönde döner)
-  ileri(255); // ileri(byte hız)
-
-  delay(1000);  // 1 saniye ileri git
-
-  // DUR
-  dur(100); //dur(byte guc) -> guc ne kadar yüksekse o kadar sert fren yapar.
-
-  //durduğunu anla
-  delay(1000);
-}
-
-
 float olcum() {
+  
   //verileri güncelliyoruz
   for (int i = 0; i < 4; i++) {
     olc();
@@ -205,9 +150,14 @@ void olc() {
   mavi = pulseIn(out, LOW);
 }
 
-
-
-
+void renk_sensor_test(int delayValue) {
+  olc();
+  Serial.print("KIRMIZI: ");
+  Serial.print(kirmizi);
+  Serial.print(" MAVİ: ");
+  Serial.println(mavi);
+  delay(delayValue);
+}
 
 // ******************************Ortalama hesaplayan fonksiyon*****************************
 double ortalamaHesapla(const int arr[], int size) {

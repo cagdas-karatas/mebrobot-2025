@@ -12,7 +12,7 @@ boolean rastgele = true;
 
 // TOPLARI TOKATLAYAN VE CEZAYI TOKATLAYAN SERVOLARIN NORMAL DURUMLARI
 // ÖZELLİKLE tokat_default TOKATLAMA KODLARINDA DA KULLANILIYOR, BURADAN DEĞİŞTİRİLMESİ ÖNEMLİ
-byte tokat_default = 84, ceza_tokat_default = 70;
+byte tokat_default = 90, ceza_tokat_default = 70;
 
 void setup() {
 
@@ -35,6 +35,9 @@ void setup() {
 }
 
 void loop() {
+  float sonuc = olcum();
+  Serial.print("Sonuc: ");
+  Serial.println(sonuc);
   /* //Bİ SAĞA Bİ SOLA ATAN KOD
     if(digitalRead(top_sensor)==1)
     {
@@ -56,7 +59,7 @@ void loop() {
     tokat.write(180);
     delay(100);*/
 
-  //NORMAL KOD
+  /* //NORMAL KOD
   if (digitalRead(top_sensor) == 1)
   {
     int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
@@ -82,7 +85,7 @@ void loop() {
   else
   {
     //Serial.println("BOŞŞ");
-  }
+  } */
 
 
 }

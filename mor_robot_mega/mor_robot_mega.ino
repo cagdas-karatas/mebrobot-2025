@@ -38,8 +38,8 @@ void setup() {
   bizim.attach(A7);
   rakip.attach(A8);
   ceza.attach(A9);
-  bizim.write(180);
-  rakip.write(0);
+  bizim.write(170);
+  rakip.write(30);
   ceza.write(0);
 
   // MZ80 TANIMLARI
@@ -84,7 +84,7 @@ void setup() {
 }
 
 void loop() {
-  rastgele();
+  //rastgele();
 }
 
 void goz_okuma()
@@ -101,16 +101,12 @@ void rastgele()
 {
   if(digitalRead(sol_goz) == 0)
   {
-    geri(200);
-    delay(100);
-    sag(255);
-    delay(300);
+    sag(100);
+    delay(400);
   }
   else if(digitalRead(sag_goz) == 0)
   {
-    geri(200);
-    delay(100);
-    sag(255);
+    sag(100);
     delay(600);
   }
   else
