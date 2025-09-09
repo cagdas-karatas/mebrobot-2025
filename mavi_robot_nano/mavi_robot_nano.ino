@@ -3,16 +3,16 @@
 Servo tokat;  // Servo nesnesi oluştur
 Servo ceza_tokat;
 
-int out = 2, s0 = 3, s1 = 4, s2 = 5, s3 = 6, top_sensor = 12;
+byte out = 2, s0 = 3, s1 = 4, s2 = 5, s3 = 6, top_sensor = 12, bolge_switch=8;
 
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
-boolean rastgele = true;
+boolean ceza_aldik_mi = false;
 
 // TOPLARI TOKATLAYAN VE CEZAYI TOKATLAYAN SERVOLARIN NORMAL DURUMLARI
 // ÖZELLİKLE tokat_default TOKATLAMA KODLARINDA DA KULLANILIYOR, BURADAN DEĞİŞTİRİLMESİ ÖNEMLİ
-byte tokat_default = 84, ceza_tokat_default = 70;
+byte tokat_default = 90, ceza_tokat_default = 70, bolge = 0;
 
 void setup() {
 
@@ -23,11 +23,14 @@ void setup() {
 
   pinMode(out, INPUT);
   pinMode(top_sensor, INPUT);
+  pinMode(bolge_switch, INPUT);
   pinMode(s0, OUTPUT);
   pinMode(s1, OUTPUT);
   pinMode(s2, OUTPUT);
   pinMode(s3, OUTPUT);
-
+  
+  bolge = digitalRead(bolge_switch);
+  
   digitalWrite(s0, HIGH);
   digitalWrite(s1, LOW);
 
@@ -61,23 +64,44 @@ void loop() {
   if (digitalRead(top_sensor) == 1)
   {
     int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
-    if (sonuc > 235 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    if (sonuc > 260 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("KIRMIZI: ");
-      Serial.println(sonuc);
-      dogru_al();
+      //Serial.print("KIRMIZI: ");
+      //Serial.println(sonuc);
+      if(bolge == 1) //BÖLGEMİZ KIRMIZI
+      {
+        dogru_al();
+      }
+      else
+      {
+        rakip_al();
+      }
+      
     }
     else if (sonuc < 85 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("MAVİ: ");
-      Serial.println(sonuc);
-      rakip_al();
+      //Serial.print("MAVİ: ");
+      //Serial.println(sonuc);
+      if(bolge == 0) //BÖLGEMİZ MAVİ
+      {
+        dogru_al();
+      }
+      else
+      {
+        rakip_al();
+      }
     }
-    else if (sonuc > 150 && sonuc < 200 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc > 150 && sonuc < 230 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.println("CEZA: ");
-      Serial.println(sonuc);
+      //Serial.print("CEZA: ");
+      //Serial.println(sonuc);
       ceza_al();
+      ceza_aldik_mi = true;
+    }
+    else
+    {
+      //Serial.print("KARARSIZ: ");
+      //Serial.println(sonuc);
     }
   }
   else
@@ -96,18 +120,25 @@ void dogru_al() {
 
 void rakip_al() {
   tokat.write(0);
-  delay(100);
+  delay(150);
   tokat.write(tokat_default);
 }
 
 void ceza_al() {
-  ceza_tokat.write(150);
-  delay(120);
-  tokat.write(180);
-  delay(150);
-  tokat.write(tokat_default);
-  delay(100);
-  ceza_tokat.write(100);
+  if(!ceza_aldik_mi)
+  {
+    ceza_tokat.write(150);
+    delay(120);
+    tokat.write(180);
+    delay(150);
+    tokat.write(tokat_default);
+    delay(100);
+    ceza_tokat.write(100);
+  }
+  else
+  {
+    rakip_al();
+  }
 }
 
 float olcum() {

@@ -5,6 +5,9 @@ Servo bizim;
 Servo rakip;
 Servo ceza;
 
+// HABERLEŞME PİNLERİ
+#define 
+
 // Sağ motor pinleri
 #define EN_R 2
 #define RPWM_R 3
@@ -27,11 +30,14 @@ Servo ceza;
 #define rgb 42
 #define LED_COUNT  8      // LED sayısı
 
+#define bolge_switch A14
+
 Adafruit_NeoPixel strip(LED_COUNT, rgb, NEO_GRB + NEO_KHZ800);
 
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
+byte bolge = 0;
 
 void setup() {
   // SERVO TANIMLARI
@@ -71,11 +77,20 @@ void setup() {
   digitalWrite(s1, LOW);
 
   //NEOPİXEL
+  pinMode(bolge_switch, INPUT);
+  bolge = digitalRead(bolge_switch);
   strip.begin();
   strip.show(); 
-
+  
   for (int i = 0; i < LED_COUNT; i++) {
-    strip.setPixelColor(i, strip.Color(255, 0, 0)); // kırmızı
+    if(bolge = 1)
+    {
+      strip.setPixelColor(i, strip.Color(255, 0, 0)); // kırmızı
+    }
+    else
+    {
+      strip.setPixelColor(i, strip.Color(0, 0, 255)); // kırmızı
+    }
   }
   strip.show();
 
@@ -84,6 +99,7 @@ void setup() {
 }
 
 void loop() {
+  
   rastgele();
 }
 
@@ -104,18 +120,18 @@ void rastgele()
     geri(200);
     delay(100);
     sag(255);
-    delay(300);
+    delay(400);
   }
   else if(digitalRead(sag_goz) == 0)
   {
     geri(200);
     delay(100);
     sag(255);
-    delay(600);
+    delay(700);
   }
   else
   {
-    ileri(120);
+    ileri(100);
   }
 }
 

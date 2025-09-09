@@ -5,6 +5,12 @@ Servo bizim;
 Servo rakip;
 Servo ceza;
 
+// HABERLEŞME
+#define sayac_bildirim A0
+#define ceza_bildirim A1
+#define kilit_sinyal A2
+#define ceza_tokatla_sinyal A3
+
 // Sağ motor pinleri
 #define EN_R 2
 #define RPWM_R 3
@@ -26,20 +32,25 @@ Servo ceza;
 
 #define rgb 42
 #define LED_COUNT  8      // LED sayısı
+#define KIRMIZI 1
+#define MAVI 0
 
 Adafruit_NeoPixel strip(LED_COUNT, rgb, NEO_GRB + NEO_KHZ800);
 
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
+byte bolge = 0, duvarla_isim_var = 0;
+
+byte bizim_kapak_default = 20;
 
 void setup() {
   // SERVO TANIMLARI
-  bizim.attach(A7);
-  rakip.attach(A8);
+  bizim.attach(A8);
+  rakip.attach(A7);
   ceza.attach(A9);
-  bizim.write(180);
-  rakip.write(0);
+  bizim.write(bizim_kapak_default);
+  rakip.write(170);
   ceza.write(0);
 
   // MZ80 TANIMLARI
@@ -52,7 +63,7 @@ void setup() {
   pinMode(s2, OUTPUT);
   pinMode(s3, OUTPUT);
   pinMode(out, INPUT);
-  
+
   // Sağ motor pin tanımları
   pinMode(EN_R, OUTPUT);
   pinMode(RPWM_R, OUTPUT);
@@ -63,6 +74,12 @@ void setup() {
   pinMode(RPWM_L, OUTPUT);
   pinMode(LPWM_L, OUTPUT);
 
+  //HABERLEŞME PİNLERİ
+  pinMode(sayac_bildirim, INPUT);
+  pinMode(ceza_bildirim, INPUT);
+  pinMode(kilit_sinyal, OUTPUT);
+  pinMode(ceza_tokatla_sinyal, OUTPUT);
+
   // Motor sürücülerini aktif et
   digitalWrite(EN_R, HIGH);
   digitalWrite(EN_L, HIGH);
@@ -71,11 +88,20 @@ void setup() {
   digitalWrite(s1, LOW);
 
   //NEOPİXEL
+  pinMode(A14, INPUT);
+  bolge = digitalRead(A14);
   strip.begin();
-  strip.show(); 
+  strip.show();
 
   for (int i = 0; i < LED_COUNT; i++) {
-    strip.setPixelColor(i, strip.Color(255, 0, 0)); // kırmızı
+    if (bolge == KIRMIZI)
+    {
+      strip.setPixelColor(i, strip.Color(255, 0, 0)); // kırmızı
+    }
+    else
+    {
+      strip.setPixelColor(i, strip.Color(0, 0, 255)); // mavi
+    }
   }
   strip.show();
 
@@ -84,7 +110,32 @@ void setup() {
 }
 
 void loop() {
-  rastgele();
+  if (digitalRead(sayac_bildirim) == 1)
+  {
+    digitalWrite(kilit_sinyal, HIGH);
+    duvarla_isim_var = 1;
+    while(duvarla_isim_var == 1)
+    {
+      duvar_takip(1);
+    }
+    digitalWrite(kilit_sinyal, LOW);
+    delay(2000);
+  }
+  else if (digitalRead(ceza_bildirim) == 1)
+  {
+    digitalWrite(kilit_sinyal, HIGH);
+    duvarla_isim_var = 1;
+    while(duvarla_isim_var == 1)
+    {
+      duvar_takip(0);
+    }
+    digitalWrite(kilit_sinyal, LOW);
+    delay(2000);
+  }
+  else
+  {
+    rastgele();
+  }
 }
 
 void goz_okuma()
@@ -99,20 +150,98 @@ void goz_okuma()
 
 void rastgele()
 {
-  if(digitalRead(sol_goz) == 0)
+  if (digitalRead(sol_goz) == 0)
   {
     sag(100);
     delay(500);
   }
-  else if(digitalRead(sag_goz) == 0)
+  else if (digitalRead(sag_goz) == 0)
   {
     sag(100);
     delay(700);
   }
   else
   {
-    ileri(120);
+    ileri(100);
   }
+}
+
+void duvar_takip(byte nereye)
+{
+  if (digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 0)
+  {
+    dur(200);
+    int sonuc = olcum();
+    if ( (sonuc < 70 && bolge != nereye) || (sonuc > 230 && bolge == nereye) )
+    {
+      dur(200);
+      park(nereye);
+    }
+    while (digitalRead(sag_goz) == 0)
+    {
+      sol(100);
+    }
+    
+    dur(200);
+  }
+  else if(digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 1)
+  {
+    while (digitalRead(sag_goz) == 1)
+    {
+      sol(100);
+    }
+  }
+  else
+  {
+    if (digitalRead(sag_goz) == 1) //SAĞA YANAŞ
+    {
+      ileri(150, 100);
+    }
+    else
+    {
+      ileri(100, 150);
+    }
+  }
+}
+
+void park (byte nereye)
+{
+  while (digitalRead(sag_goz) == 0)
+  {
+    sol(100);
+  }
+  dur(200);
+  sol(100);
+  delay(100);
+  dur(200);
+  if (nereye == 1)
+  {
+    bizim.write(bizim_kapak_default + 90);
+    delay(150);
+  }
+  else
+  {
+    sol(100);
+    delay(200);
+    dur(200);
+    ceza.write(120);
+    delay(100);
+    digitalWrite(ceza_tokatla_sinyal, HIGH);
+    delay(500);
+    digitalWrite(ceza_tokatla_sinyal, LOW);
+  }
+  ileri(100);
+  delay(1600);
+  dur(200);
+  if(nereye == 1)
+  {
+    bizim.write(bizim_kapak_default);
+  }
+  else
+  {
+    ceza.write(0);
+  }
+  duvarla_isim_var = 0;
 }
 
 void ileri(byte hiz)
@@ -121,6 +250,14 @@ void ileri(byte hiz)
   analogWrite(LPWM_R, 0);
   analogWrite(RPWM_L, 0);
   analogWrite(LPWM_L, hiz);
+}
+
+void ileri(byte sol_hiz, byte sag_hiz)
+{
+  analogWrite(RPWM_R, sag_hiz);
+  analogWrite(LPWM_R, 0);
+  analogWrite(RPWM_L, 0);
+  analogWrite(LPWM_L, sol_hiz);
 }
 
 void geri(byte hiz)
@@ -182,7 +319,7 @@ float olcum() {
   // ÖRNEK : 64,65,68,97 ÖLÇMÜŞ OLALIM -> 67 GİBİ BİR SONUÇ DÖNDÜRÜYOR ANLIK DALGALANMALARDAN ETKİLENMEMİŞ OLUYORUZ
   kirmizi = stabilSonucuBul(kirmizi_veriler, 4);
   mavi = stabilSonucuBul(mavi_veriler, 4);
-  
+
   float sonuc = ((float)mavi / (float)kirmizi) * 100;
   return sonuc;
 }
