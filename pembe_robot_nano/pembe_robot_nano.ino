@@ -14,7 +14,6 @@ byte out = 2, s0 = 3, s1 = 4, s2 = 5, s3 = 6, top_sensor = 12, bolge_switch = 8,
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
-boolean ceza_aldik_mi = false;
 
 // TOPLARI TOKATLAYAN VE CEZAYI TOKATLAYAN SERVOLARIN NORMAL DURUMLARI
 // ÖZELLİKLE tokat_default TOKATLAMA KODLARINDA DA KULLANILIYOR, BURADAN DEĞİŞTİRİLMESİ ÖNEMLİ
@@ -86,10 +85,11 @@ void loop() {
   if (digitalRead(top_sensor) == 1)
   {
     int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
-    if (sonuc > 33 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    if (sonuc > 27 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      //Serial.print("KIRMIZI: ");
-      //Serial.println(sonuc);
+      Serial.print("KIRMIZI: ");
+      Serial.println(sonuc);
+      
       if (bolge == 1 && sayac != 3)
       {
          dogru_al();
@@ -112,8 +112,9 @@ void loop() {
     }
     else if (sonuc < 6 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      //Serial.print("MAVİ: ");
-      //Serial.println(sonuc);
+      Serial.print("MAVİ: ");
+      Serial.println(sonuc);
+      
       if (bolge == 0 && sayac != 3)
       {
          dogru_al();
@@ -134,12 +135,12 @@ void loop() {
       }
       
     }
-    else if (sonuc > 8 && sonuc < 26 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc > 9 && sonuc < 20 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      //Serial.print("CEZA: ");
-      //Serial.println(sonuc);
+      Serial.print("CEZA: ");
+      Serial.println(sonuc);
+      
       ceza_al();
-      ceza_aldik_mi = true;
       digitalWrite(ceza_sinyal, HIGH);
       delay(2000);
       while(digitalRead(kilit_bildirim) == 1)
@@ -153,11 +154,12 @@ void loop() {
         }
       }
       digitalWrite(ceza_sinyal, LOW);
+      
     }
     else
     {
-      //Serial.print("KARARSIZ: ");
-      //Serial.println(sonuc);
+      Serial.print("KARARSIZ: ");
+      Serial.println(sonuc);
     }
   }
   else
@@ -181,8 +183,6 @@ void rakip_al() {
 }
 
 void ceza_al() {
-  if(!ceza_aldik_mi)
-  {
     ceza_tokat.write(150);
     delay(120);
     tokat.write(180);
@@ -190,11 +190,6 @@ void ceza_al() {
     tokat.write(tokat_default);
     delay(100);
     ceza_tokat.write(100);
-  }
-  else
-  {
-    rakip_al();
-  }
 }
 
 float olcum() {

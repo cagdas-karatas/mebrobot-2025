@@ -3,16 +3,22 @@
 Servo tokat;  // Servo nesnesi oluştur
 Servo ceza_tokat;
 
-byte out = 2, s0 = 3, s1 = 4, s2 = 5, s3 = 6, top_sensor = 12, bolge_switch=8;
+// HABERLEŞME
+#define sayac_sinyal A0
+#define ceza_sinyal A1
+#define kilit_bildirim A2
+#define ceza_tokatla_bildirim A3
+
+byte out = 2, s0 = 3, s1 = 4, s2 = 5, s3 = 6, top_sensor = 12, bolge_switch = 8, bolge = 0;
 
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
-boolean ceza_aldik_mi = false;
 
 // TOPLARI TOKATLAYAN VE CEZAYI TOKATLAYAN SERVOLARIN NORMAL DURUMLARI
 // ÖZELLİKLE tokat_default TOKATLAMA KODLARINDA DA KULLANILIYOR, BURADAN DEĞİŞTİRİLMESİ ÖNEMLİ
-byte tokat_default = 90, ceza_tokat_default = 70, bolge = 0;
+byte tokat_default = 90, ceza_tokat_default = 70;
+byte sayac = 0;
 
 void setup() {
 
@@ -23,22 +29,37 @@ void setup() {
 
   pinMode(out, INPUT);
   pinMode(top_sensor, INPUT);
-  pinMode(bolge_switch, INPUT);
   pinMode(s0, OUTPUT);
   pinMode(s1, OUTPUT);
   pinMode(s2, OUTPUT);
   pinMode(s3, OUTPUT);
-  
-  bolge = digitalRead(bolge_switch);
-  
+
+  //HABERLEŞME PİNLERİ
+  pinMode(sayac_sinyal, OUTPUT);
+  pinMode(ceza_sinyal, OUTPUT);
+  pinMode(kilit_bildirim, INPUT);
+  pinMode(ceza_tokatla_bildirim, INPUT);
+  pinMode(bolge_switch, INPUT);
+
   digitalWrite(s0, HIGH);
   digitalWrite(s1, LOW);
+
+  bolge = digitalRead(bolge_switch);
 
   Serial.begin(9600);
 }
 
 void loop() {
-  
+  /*
+    olcum();
+    Serial.print("Kırmızı: ");
+    Serial.print(kirmizi);
+    Serial.print(" Mavi: ");
+    Serial.println(mavi);*/
+
+
+  //Serial.println(olcum());
+  //Serial.println();
   /* //Bİ SAĞA Bİ SOLA ATAN KOD
     if(digitalRead(top_sensor)==1)
     {
@@ -64,44 +85,80 @@ void loop() {
   if (digitalRead(top_sensor) == 1)
   {
     int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
-    if (sonuc > 260 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    if (sonuc > 270 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      //Serial.print("KIRMIZI: ");
-      //Serial.println(sonuc);
-      if(bolge == 1) //BÖLGEMİZ KIRMIZI
-      {
-        dogru_al();
-      }
-      else
-      {
-        rakip_al();
-      }
+      Serial.print("KIRMIZI: ");
+      Serial.println(sonuc);
       
-    }
-    else if (sonuc < 85 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
-    {
-      //Serial.print("MAVİ: ");
-      //Serial.println(sonuc);
-      if(bolge == 0) //BÖLGEMİZ MAVİ
+      if (bolge == 1 && sayac != 3)
       {
         dogru_al();
+        sayac++;
       }
       else
       {
         rakip_al();
       }
+
+      if (sayac == 3)
+      {
+        digitalWrite(sayac_sinyal, HIGH);
+        delay(2000);
+        while (digitalRead(kilit_bildirim) == 1) {}
+        digitalWrite(sayac_sinyal, LOW);
+        sayac = 0;
+      }
+
     }
-    else if (sonuc > 150 && sonuc < 230 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc < 75 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      //Serial.print("CEZA: ");
-      //Serial.println(sonuc);
+      Serial.print("MAVİ: ");
+      Serial.println(sonuc);
+      
+      if (bolge == 0 && sayac != 3)
+      {
+        dogru_al();
+        sayac++;
+      }
+      else
+      {
+        rakip_al();
+      }
+
+      if (sayac == 3)
+      {
+        digitalWrite(sayac_sinyal, HIGH);
+        delay(2000);
+        while (digitalRead(kilit_bildirim) == 1) {}
+        digitalWrite(sayac_sinyal, LOW);
+        sayac = 0;
+      }
+
+    }
+    else if (sonuc > 150 && sonuc < 240 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    {
+      Serial.print("CEZA: ");
+      Serial.println(sonuc);
+      
       ceza_al();
-      ceza_aldik_mi = true;
+      digitalWrite(ceza_sinyal, HIGH);
+      delay(2000);
+      while (digitalRead(kilit_bildirim) == 1)
+      {
+        if (digitalRead(ceza_tokatla_bildirim) == 1)
+        {
+          ceza_tokat.write(40);
+          delay(200);
+          ceza_tokat.write(70);
+          delay(400);
+        }
+      }
+      digitalWrite(ceza_sinyal, LOW);
     }
     else
     {
-      //Serial.print("KARARSIZ: ");
-      //Serial.println(sonuc);
+      Serial.print("KARARSIZ: ");
+      Serial.println(sonuc);
     }
   }
   else
@@ -114,35 +171,28 @@ void loop() {
 
 void dogru_al() {
   tokat.write(180);
-  delay(150);
+  delay(120);
   tokat.write(tokat_default);
 }
 
 void rakip_al() {
   tokat.write(0);
-  delay(150);
+  delay(120);
   tokat.write(tokat_default);
 }
 
 void ceza_al() {
-  if(!ceza_aldik_mi)
-  {
-    ceza_tokat.write(150);
-    delay(120);
-    tokat.write(180);
-    delay(150);
-    tokat.write(tokat_default);
-    delay(100);
-    ceza_tokat.write(100);
-  }
-  else
-  {
-    rakip_al();
-  }
+  ceza_tokat.write(150);
+  delay(120);
+  tokat.write(180);
+  delay(150);
+  tokat.write(tokat_default);
+  delay(100);
+  ceza_tokat.write(100);
 }
 
 float olcum() {
-  
+
   //verileri güncelliyoruz
   for (int i = 0; i < 4; i++) {
     olc();
@@ -154,7 +204,7 @@ float olcum() {
   // ÖRNEK : 64,65,68,97 ÖLÇMÜŞ OLALIM -> 67 GİBİ BİR SONUÇ DÖNDÜRÜYOR ANLIK DALGALANMALARDAN ETKİLENMEMİŞ OLUYORUZ
   kirmizi = stabilSonucuBul(kirmizi_veriler, 4);
   mavi = stabilSonucuBul(mavi_veriler, 4);
-  
+
   float sonuc = ((float)mavi / (float)kirmizi) * 100;
   return sonuc;
 }

@@ -46,8 +46,8 @@ byte bizim_kapak_default = 20;
 
 void setup() {
   // SERVO TANIMLARI
-  bizim.attach(A8);
   rakip.attach(A7);
+  bizim.attach(A8);
   ceza.attach(A9);
   bizim.write(bizim_kapak_default);
   rakip.write(170);
@@ -186,8 +186,15 @@ void duvar_takip(byte nereye)
   }
   else if(digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 1)
   {
+    unsigned long firstMillis = millis();
     while (digitalRead(sag_goz) == 1)
     {
+      if( (millis() - firstMillis) > 3000)
+      {
+        ileri(100);
+        delay(300);
+        break;
+      }
       sol(100);
     }
   }
