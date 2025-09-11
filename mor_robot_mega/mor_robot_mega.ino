@@ -10,6 +10,7 @@ Servo ceza;
 #define ceza_bildirim A1
 #define kilit_sinyal A2
 #define ceza_tokatla_sinyal A3
+#define otur_bildirim A4
 
 // Sağ motor pinleri
 #define EN_R 2
@@ -77,6 +78,7 @@ void setup() {
   //HABERLEŞME PİNLERİ
   pinMode(sayac_bildirim, INPUT);
   pinMode(ceza_bildirim, INPUT);
+  pinMode(otur_bildirim, INPUT);
   pinMode(kilit_sinyal, OUTPUT);
   pinMode(ceza_tokatla_sinyal, OUTPUT);
 
@@ -131,6 +133,10 @@ void loop() {
     }
     digitalWrite(kilit_sinyal, LOW);
     delay(2000);
+  }
+  else if(digitalRead(otur_bildirim) == 1)
+  {
+    duvar_takip_otur();
   }
   else
   {
@@ -211,6 +217,53 @@ void duvar_takip(byte nereye)
   }
 }
 
+void duvar_takip_otur()
+{
+  if (digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 0)
+  {
+    dur(200);
+    int sonuc = olcum();
+    if ( (sonuc < 82 && bolge == KIRMIZI) || (sonuc > 330 && bolge == MAVI) )
+    {
+      ileri(100);
+      delay(150);
+      dur(0);
+      while(1);
+    }
+    while (digitalRead(sag_goz) == 0)
+    {
+      sol(100);
+    }
+    
+    dur(200);
+  }
+  else if(digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 1)
+  {
+    unsigned long firstMillis = millis();
+    while (digitalRead(sag_goz) == 1)
+    {
+      if( (millis() - firstMillis) > 3000)
+      {
+        ileri(100);
+        delay(300);
+        break;
+      }
+      sol(100);
+    }
+  }
+  else
+  {
+    if (digitalRead(sag_goz) == 1) //SAĞA YANAŞ
+    {
+      ileri(150, 100);
+    }
+    else
+    {
+      ileri(100, 150);
+    }
+  }
+}
+
 void park (byte nereye)
 {
   while (digitalRead(sag_goz) == 0)
@@ -229,7 +282,7 @@ void park (byte nereye)
   else
   {
     sol(100);
-    delay(200);
+    delay(300);
     dur(200);
     ceza.write(120);
     delay(100);

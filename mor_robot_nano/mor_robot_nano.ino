@@ -8,6 +8,12 @@ Servo ceza_tokat;
 #define ceza_sinyal A1
 #define kilit_bildirim A2
 #define ceza_tokatla_bildirim A3
+#define otur_sinyal A4
+
+#define KIRMIZI 1
+#define MAVI 0
+
+boolean baslangic_ceza_aldik_mi = false;
 
 byte out = 2, s0 = 3, s1 = 4, s2 = 5, s3 = 6, top_sensor = 12, bolge_switch = 8, bolge = 0;
 
@@ -37,6 +43,7 @@ void setup() {
   //HABERLEŞME PİNLERİ
   pinMode(sayac_sinyal, OUTPUT);
   pinMode(ceza_sinyal, OUTPUT);
+  pinMode(otur_sinyal, OUTPUT);
   pinMode(kilit_bildirim, INPUT);
   pinMode(ceza_tokatla_bildirim, INPUT);
   pinMode(bolge_switch, INPUT);
@@ -50,37 +57,27 @@ void setup() {
 }
 
 void loop() {
-  /*
-  olcum();
-  Serial.print("Kırmızı: ");
-  Serial.print(kirmizi);
-  Serial.print(" Mavi: ");
-  Serial.println(mavi);*/
+  baslangic_kod();
+  otur();
+  if (baslangic_ceza_aldik_mi == true)
+  {
+    ceza_birak();
+  }
+  unsigned long firstMillis = millis();
+  while( (millis() - firstMillis) < 90000)
+  {
+    normal_kod();
+  }
+  bizim_topu_birak();
+  while(1)
+  {
+    tek_tek_topla();
+  }
 
+}
 
-  //Serial.println(olcum());
-  //Serial.println();
-  /* //Bİ SAĞA Bİ SOLA ATAN KOD
-    if(digitalRead(top_sensor)==1)
-    {
-    if(rastgele)
-    {dogru_al();
-    }
-    else
-    {
-    rakip_al();
-    }
-    rastgele=!rastgele;
-    }*/
-
-  /* //Bİ SAĞ Bİ SOL TOKATLAMA SERVO TESTİ
-    tokat.write(0);
-    delay(100);
-    tokat.write(90);
-    delay(100);
-    tokat.write(180);
-    delay(100);*/
-
+void normal_kod()
+{
   //NORMAL KOD
   if (digitalRead(top_sensor) == 1)
   {
@@ -89,11 +86,11 @@ void loop() {
     {
       Serial.print("KIRMIZI: ");
       Serial.println(sonuc);
-      
-      if (bolge == 1 && sayac != 3)
+
+      if (bolge == KIRMIZI && sayac != 3)
       {
-         dogru_al();
-         sayac++;
+        dogru_al();
+        sayac++;
       }
       else
       {
@@ -102,59 +99,40 @@ void loop() {
 
       if (sayac == 3)
       {
-        digitalWrite(sayac_sinyal, HIGH);
-        delay(2000);
-        while(digitalRead(kilit_bildirim) == 1){}
-        digitalWrite(sayac_sinyal, LOW);
+        bizim_topu_birak();
         sayac = 0;
       }
-     
+
     }
     else if (sonuc < 80 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
       Serial.print("MAVİ: ");
       Serial.println(sonuc);
-      
-      if (bolge == 0 && sayac != 3)
+
+      if (bolge == MAVI && sayac != 3)
       {
-         dogru_al();
-         sayac++;
+        dogru_al();
+        sayac++;
       }
       else
       {
         rakip_al();
       }
-      
+
       if (sayac == 3)
       {
-        digitalWrite(sayac_sinyal, HIGH);
-        delay(2000);
-        while(digitalRead(kilit_bildirim) == 1){}
-        digitalWrite(sayac_sinyal, LOW);
+        bizim_topu_birak();
         sayac = 0;
       }
-      
+
     }
     else if (sonuc > 125 && sonuc < 160 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
       Serial.print("CEZA: ");
       Serial.println(sonuc);
-      
+
       ceza_al();
-      digitalWrite(ceza_sinyal, HIGH);
-      delay(2000);
-      while(digitalRead(kilit_bildirim) == 1)
-      {
-        if(digitalRead(ceza_tokatla_bildirim) == 1)
-        {
-          ceza_tokat.write(40);
-          delay(200);
-          ceza_tokat.write(70);
-          delay(400);
-        }
-      }
-      digitalWrite(ceza_sinyal, LOW);
-      
+      ceza_birak();
     }
     else
     {
@@ -166,8 +144,127 @@ void loop() {
   {
     //Serial.println("BOŞŞ");
   }
+}
 
+void baslangic_kod()
+{
+  while (1)
+  {
+    //NORMAL KOD
+    if (digitalRead(top_sensor) == 1)
+    {
+      int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
+      if (sonuc > 183 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      {
+        Serial.print("KIRMIZI: ");
+        Serial.println(sonuc);
 
+        if (bolge == KIRMIZI)
+        {
+          dogru_al();
+          bizim_topu_birak();
+          break;
+        }
+        else
+        {
+          rakip_al();
+        }
+
+      }
+      else if (sonuc < 80 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      {
+        Serial.print("MAVİ: ");
+        Serial.println(sonuc);
+
+        if (bolge == MAVI && sayac != 3)
+        {
+          dogru_al();
+          bizim_topu_birak();
+          break;
+        }
+        else
+        {
+          rakip_al();
+        }
+
+      }
+      else if (sonuc > 125 && sonuc < 160 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      {
+        Serial.print("CEZA: ");
+        Serial.println(sonuc);
+
+        ceza_al();
+        baslangic_ceza_aldik_mi = true;
+      }
+      else
+      {
+        Serial.print("KARARSIZ: ");
+        Serial.println(sonuc);
+      }
+    }
+    else
+    {
+      //Serial.println("BOŞŞ");
+    }
+  }
+}
+
+void tek_tek_topla()
+{
+  //TEK TEK BIRAKAN KOD
+  if (digitalRead(top_sensor) == 1)
+  {
+    int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
+    if (sonuc > 183 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    {
+      Serial.print("KIRMIZI: ");
+      Serial.println(sonuc);
+
+      if (bolge == KIRMIZI && sayac != 3)
+      {
+        dogru_al();
+        bizim_topu_birak();
+      }
+      else
+      {
+        rakip_al();
+      }
+
+    }
+    else if (sonuc < 80 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    {
+      Serial.print("MAVİ: ");
+      Serial.println(sonuc);
+
+      if (bolge == MAVI && sayac != 3)
+      {
+        dogru_al();
+        bizim_topu_birak();
+      }
+      else
+      {
+        rakip_al();
+      }
+
+    }
+    else if (sonuc > 125 && sonuc < 160 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    {
+      Serial.print("CEZA: ");
+      Serial.println(sonuc);
+
+      ceza_al();
+      ceza_birak();
+    }
+    else
+    {
+      Serial.print("KARARSIZ: ");
+      Serial.println(sonuc);
+    }
+  }
+  else
+  {
+    //Serial.println("BOŞŞ");
+  }
 }
 
 void dogru_al() {
@@ -183,17 +280,48 @@ void rakip_al() {
 }
 
 void ceza_al() {
-    ceza_tokat.write(150);
-    delay(120);
-    tokat.write(180);
-    delay(150);
-    tokat.write(tokat_default);
-    delay(100);
-    ceza_tokat.write(100);
+  ceza_tokat.write(150);
+  delay(120);
+  tokat.write(180);
+  delay(150);
+  tokat.write(tokat_default);
+  delay(100);
+  ceza_tokat.write(100);
+}
+
+void bizim_topu_birak()
+{
+  digitalWrite(sayac_sinyal, HIGH);
+  delay(2000);
+  while (digitalRead(kilit_bildirim) == 1) {}
+  digitalWrite(sayac_sinyal, LOW);
+}
+
+void ceza_birak()
+{
+  digitalWrite(ceza_sinyal, HIGH);
+  delay(4000);
+  while (digitalRead(kilit_bildirim) == 1)
+  {
+    if (digitalRead(ceza_tokatla_bildirim) == 1)
+    {
+      ceza_tokat.write(ceza_tokat_default - 50);
+      delay(200);
+      ceza_tokat.write(ceza_tokat_default);
+      delay(400);
+    }
+  }
+  digitalWrite(ceza_sinyal, LOW);
+}
+
+void otur()
+{
+  digitalWrite(otur_sinyal, HIGH);
+  while (1);
 }
 
 float olcum() {
-  
+
   //verileri güncelliyoruz
   for (int i = 0; i < 4; i++) {
     olc();
@@ -201,11 +329,11 @@ float olcum() {
     mavi_veriler[i] = mavi;
   }
 
-  // 6 TANE VERİ ALIP İÇELERİNDEN TUTARLI HALE GETİRİYORUZ
+  // 4 TANE VERİ ALIP İÇELERİNDEN TUTARLI HALE GETİRİYORUZ
   // ÖRNEK : 64,65,68,97 ÖLÇMÜŞ OLALIM -> 67 GİBİ BİR SONUÇ DÖNDÜRÜYOR ANLIK DALGALANMALARDAN ETKİLENMEMİŞ OLUYORUZ
   kirmizi = stabilSonucuBul(kirmizi_veriler, 4);
   mavi = stabilSonucuBul(mavi_veriler, 4);
-  
+
   float sonuc = ((float)mavi / (float)kirmizi) * 100;
   return sonuc;
 }
