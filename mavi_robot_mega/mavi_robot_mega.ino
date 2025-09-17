@@ -10,6 +10,7 @@ Servo ceza;
 #define ceza_bildirim A1
 #define kilit_sinyal A2
 #define ceza_tokatla_sinyal A3
+#define otur_bildirim A4
 
 // Sağ motor pinleri
 #define EN_R 2
@@ -31,7 +32,7 @@ Servo ceza;
 #define out 44
 
 #define rgb 42
-#define LED_COUNT  10      // LED sayısı
+#define LED_COUNT  8      // LED sayısı
 #define KIRMIZI 1
 #define MAVI 0
 
@@ -77,6 +78,7 @@ void setup() {
   //HABERLEŞME PİNLERİ
   pinMode(sayac_bildirim, INPUT);
   pinMode(ceza_bildirim, INPUT);
+  pinMode(otur_bildirim, INPUT);
   pinMode(kilit_sinyal, OUTPUT);
   pinMode(ceza_tokatla_sinyal, OUTPUT);
 
@@ -106,6 +108,7 @@ void setup() {
   strip.show();
 
   Serial.begin(9600);
+  while(digitalRead(sag_goz) == 0);
   //basla();
 }
 
@@ -132,6 +135,10 @@ void loop() {
     digitalWrite(kilit_sinyal, LOW);
     delay(2000);
   }
+  else if(digitalRead(otur_bildirim) == 1)
+  {
+    duvar_takip_otur();
+  }
   else
   {
     rastgele();
@@ -150,19 +157,15 @@ void goz_okuma()
 
 void rastgele()
 {
-  if(digitalRead(sol_goz) == 0)
+  if (digitalRead(sol_goz) == 0)
   {
-    geri(200);
-    delay(100);
-    sag(255);
-    delay(300);
-  }
-  else if(digitalRead(sag_goz) == 0)
-  {
-    geri(200);
-    delay(100);
-    sag(255);
+    sag(100);
     delay(500);
+  }
+  else if (digitalRead(sag_goz) == 0)
+  {
+    sag(100);
+    delay(700);
   }
   else
   {
@@ -174,28 +177,22 @@ void duvar_takip(byte nereye)
 {
   if (digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 0)
   {
-    geri(200);
-    delay(50);
     dur(200);
-    delay(100);
     int sonuc = olcum();
     if ( (sonuc < 55 && bolge != nereye) || (sonuc > 260 && bolge == nereye) )
     {
+      dur(200);
       park(nereye);
     }
     while (digitalRead(sag_goz) == 0)
     {
-      sol(255);
+      sol(100);
     }
     
     dur(200);
   }
   else if(digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 1)
   {
-    geri(200);
-    delay(100);
-    dur(200);
-    delay(100);
     unsigned long firstMillis = millis();
     while (digitalRead(sag_goz) == 1)
     {
@@ -205,7 +202,54 @@ void duvar_takip(byte nereye)
         delay(300);
         break;
       }
-      sol(255);
+      sol(100);
+    }
+  }
+  else
+  {
+    if (digitalRead(sag_goz) == 1) //SAĞA YANAŞ
+    {
+      ileri(150, 100);
+    }
+    else
+    {
+      ileri(100, 150);
+    }
+  }
+}
+
+void duvar_takip_otur()
+{
+  if (digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 0)
+  {
+    dur(200);
+    int sonuc = olcum();
+    if ( (sonuc < 55 && bolge == KIRMIZI) || (sonuc > 260 && bolge == MAVI) )
+    {
+      ileri(100);
+      delay(150);
+      dur(0);
+      while(1);
+    }
+    while (digitalRead(sag_goz) == 0)
+    {
+      sol(100);
+    }
+    
+    dur(200);
+  }
+  else if(digitalRead(sol_goz) == 0 && digitalRead(sag_goz) == 1)
+  {
+    unsigned long firstMillis = millis();
+    while (digitalRead(sag_goz) == 1)
+    {
+      if( (millis() - firstMillis) > 3000)
+      {
+        ileri(100);
+        delay(300);
+        break;
+      }
+      sol(100);
     }
   }
   else
@@ -225,11 +269,11 @@ void park (byte nereye)
 {
   while (digitalRead(sag_goz) == 0)
   {
-    sol(255);
+    sol(100);
   }
   dur(200);
-  sol(255);
-  delay(200);
+  sol(100);
+  delay(100);
   dur(200);
   if (nereye == 1)
   {
@@ -238,8 +282,8 @@ void park (byte nereye)
   }
   else
   {
-    sol(255);
-    delay(200);
+    sol(100);
+    delay(300);
     dur(200);
     ceza.write(120);
     delay(100);
