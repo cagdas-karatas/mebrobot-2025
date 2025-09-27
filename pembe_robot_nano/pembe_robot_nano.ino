@@ -21,10 +21,13 @@ float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
 
+int kirmizi_alt_limit = 27, mavi_ust_limit = 6, ceza_alt_limit = 9, ceza_ust_limit = 20;
+
 // TOPLARI TOKATLAYAN VE CEZAYI TOKATLAYAN SERVOLARIN NORMAL DURUMLARI
 // ÖZELLİKLE tokat_default TOKATLAMA KODLARINDA DA KULLANILIYOR, BURADAN DEĞİŞTİRİLMESİ ÖNEMLİ
 byte tokat_default = 90, ceza_tokat_default = 70;
 byte sayac = 0;
+byte sayac_ust_limit = 3;
 
 void setup() {
 
@@ -82,12 +85,12 @@ void normal_kod()
   if (digitalRead(top_sensor) == 1)
   {
     int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
-    if (sonuc > 27 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    if (sonuc > kirmizi_alt_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("KIRMIZI: ");
-      Serial.println(sonuc);
+      //Serial.print("KIRMIZI: ");
+      //Serial.println(sonuc);
 
-      if (bolge == KIRMIZI && sayac != 3)
+      if (bolge == KIRMIZI)
       {
         dogru_al();
         sayac++;
@@ -97,19 +100,19 @@ void normal_kod()
         rakip_al();
       }
 
-      if (sayac == 3)
+      if (sayac == sayac_ust_limit)
       {
         bizim_topu_birak();
         sayac = 0;
       }
 
     }
-    else if (sonuc < 6 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc < mavi_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("MAVİ: ");
-      Serial.println(sonuc);
+      //Serial.print("MAVİ: ");
+      //Serial.println(sonuc);
 
-      if (bolge == MAVI && sayac != 3)
+      if (bolge == MAVI)
       {
         dogru_al();
         sayac++;
@@ -119,25 +122,25 @@ void normal_kod()
         rakip_al();
       }
 
-      if (sayac == 3)
+      if (sayac == sayac_ust_limit)
       {
         bizim_topu_birak();
         sayac = 0;
       }
 
     }
-    else if (sonuc > 9 && sonuc < 20 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc > ceza_alt_limit && sonuc < ceza_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("CEZA: ");
-      Serial.println(sonuc);
+      //Serial.print("CEZA: ");
+      //Serial.println(sonuc);
 
       ceza_al();
       ceza_birak();
     }
     else
     {
-      Serial.print("KARARSIZ: ");
-      Serial.println(sonuc);
+      //Serial.print("KARARSIZ: ");
+      //Serial.println(sonuc);
     }
   }
   else
@@ -154,10 +157,10 @@ void baslangic_kod()
     if (digitalRead(top_sensor) == 1)
     {
       int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
-      if (sonuc > 27 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      if (sonuc > kirmizi_alt_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
       {
-        Serial.print("KIRMIZI: ");
-        Serial.println(sonuc);
+        //Serial.print("KIRMIZI: ");
+        //Serial.println(sonuc);
 
         if (bolge == KIRMIZI)
         {
@@ -171,12 +174,12 @@ void baslangic_kod()
         }
 
       }
-      else if (sonuc < 6 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      else if (sonuc < mavi_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
       {
-        Serial.print("MAVİ: ");
-        Serial.println(sonuc);
+        //Serial.print("MAVİ: ");
+        //Serial.println(sonuc);
 
-        if (bolge == MAVI && sayac != 3)
+        if (bolge == MAVI)
         {
           dogru_al();
           bizim_topu_birak();
@@ -188,18 +191,18 @@ void baslangic_kod()
         }
 
       }
-      else if (sonuc > 9 && sonuc < 20 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      else if (sonuc > ceza_alt_limit && sonuc < ceza_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
       {
-        Serial.print("CEZA: ");
-        Serial.println(sonuc);
+        //Serial.print("CEZA: ");
+        //Serial.println(sonuc);
 
         ceza_al();
         baslangic_ceza_aldik_mi = true;
       }
       else
       {
-        Serial.print("KARARSIZ: ");
-        Serial.println(sonuc);
+        //Serial.print("KARARSIZ: ");
+        //Serial.println(sonuc);
       }
     }
     else
@@ -215,12 +218,12 @@ void tek_tek_topla()
   if (digitalRead(top_sensor) == 1)
   {
     int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
-    if (sonuc > 27 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    if (sonuc > kirmizi_alt_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("KIRMIZI: ");
-      Serial.println(sonuc);
+      //Serial.print("KIRMIZI: ");
+      //Serial.println(sonuc);
 
-      if (bolge == KIRMIZI && sayac != 3)
+      if (bolge == KIRMIZI)
       {
         dogru_al();
         bizim_topu_birak();
@@ -231,12 +234,12 @@ void tek_tek_topla()
       }
 
     }
-    else if (sonuc < 6 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc < mavi_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("MAVİ: ");
-      Serial.println(sonuc);
+      //Serial.print("MAVİ: ");
+      //Serial.println(sonuc);
 
-      if (bolge == MAVI && sayac != 3)
+      if (bolge == MAVI)
       {
         dogru_al();
         bizim_topu_birak();
@@ -247,18 +250,18 @@ void tek_tek_topla()
       }
 
     }
-    else if (sonuc > 9 && sonuc < 20 && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc > ceza_alt_limit && sonuc < ceza_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
-      Serial.print("CEZA: ");
-      Serial.println(sonuc);
+      //Serial.print("CEZA: ");
+      //Serial.println(sonuc);
 
       ceza_al();
       ceza_birak();
     }
     else
     {
-      Serial.print("KARARSIZ: ");
-      Serial.println(sonuc);
+      //Serial.print("KARARSIZ: ");
+      //Serial.println(sonuc);
     }
   }
   else
@@ -280,13 +283,13 @@ void rakip_al() {
 }
 
 void ceza_al() {
-  ceza_tokat.write(150);
+  ceza_tokat.write(ceza_tokat_default + 80); // CEZA KAPISINI AÇ
   delay(120);
   tokat.write(180);
   delay(150);
   tokat.write(tokat_default);
   delay(100);
-  ceza_tokat.write(100);
+  ceza_tokat.write(ceza_tokat_default + 30); // CEZA KAPISINI SIKIŞTIR
 }
 
 void bizim_topu_birak()
@@ -305,6 +308,8 @@ void ceza_birak()
   {
     if (digitalRead(ceza_tokatla_bildirim) == 1)
     {
+      ceza_tokat.write(ceza_tokat_default + 40); // 10 DERECE GERİ SALINIM
+      delay(50);
       ceza_tokat.write(ceza_tokat_default - 50);
       delay(200);
       ceza_tokat.write(ceza_tokat_default);
