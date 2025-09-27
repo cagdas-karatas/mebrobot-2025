@@ -174,7 +174,7 @@ void baslangic_kod()
         }
 
       }
-      else if (sonuc < mavi_üst_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      else if (sonuc < mavi_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
       {
         //Serial.print("MAVİ: ");
         //Serial.println(sonuc);
@@ -234,7 +234,7 @@ void tek_tek_topla()
       }
 
     }
-    else if (sonuc < mavi_üst_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+    else if (sonuc < mavi_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
     {
       //Serial.print("MAVİ: ");
       //Serial.println(sonuc);
@@ -291,7 +291,7 @@ void sadece_ayikla()
         }
 
       }
-      else if (sonuc < mavi_üst_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      else if (sonuc < mavi_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
       {
         Serial.print("MAVİ: ");
         Serial.println(sonuc);
@@ -345,7 +345,7 @@ void ceza_al() {
   delay(150);
   tokat.write(tokat_default);
   delay(100);
-  ceza_tokat.write(ceza_tokat_deafult + 30); // CEZA KAPISINI SIKIŞTIR
+  ceza_tokat.write(ceza_tokat_default + 30); // CEZA KAPISINI SIKIŞTIR
 }
 
 void bizim_topu_birak()
