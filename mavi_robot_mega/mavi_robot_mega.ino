@@ -31,19 +31,22 @@ Servo ceza;
 #define s3 48
 #define out 44
 
-#define rgb 42
-#define LED_COUNT  8      // LED sayısı
+#define LED_PIN 42
+#define LED_COUNT  8 // LED sayısı
 #define KIRMIZI 1
 #define MAVI 0
+#define BIZIM_TOPU_BIRAK 1
+#define CEZA_BIRAK 0
 
-Adafruit_NeoPixel strip(LED_COUNT, rgb, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
+int mavi_ust_limit = 55, kirmizi_alt_limit = 260;
 byte bolge = 0, duvarla_isim_var = 0;
 
-byte bizim_kapak_default = 0;
+byte bizim_kapak_default = 0, ceza_kapak_default = 0;
 
 void setup() {
   // SERVO TANIMLARI
@@ -52,7 +55,7 @@ void setup() {
   ceza.attach(A9);
   bizim.write(bizim_kapak_default);
   rakip.write(180);
-  ceza.write(0);
+  ceza.write(ceza_kapak_default);
 
   // MZ80 TANIMLARI
   pinMode(sol_goz, INPUT);
@@ -119,7 +122,7 @@ void loop() {
     duvarla_isim_var = 1;
     while(duvarla_isim_var == 1)
     {
-      duvar_takip(1);
+      duvar_takip(BIZIM_TOPU_BIRAK);
     }
     digitalWrite(kilit_sinyal, LOW);
     delay(2000);
@@ -130,7 +133,7 @@ void loop() {
     duvarla_isim_var = 1;
     while(duvarla_isim_var == 1)
     {
-      duvar_takip(0);
+      duvar_takip(CEZA_BIRAK);
     }
     digitalWrite(kilit_sinyal, LOW);
     delay(2000);
@@ -179,7 +182,15 @@ void duvar_takip(byte nereye)
   {
     dur(200);
     int sonuc = olcum();
-    if ( (sonuc < 55 && bolge != nereye) || (sonuc > 260 && bolge == nereye) )
+
+    /* AŞAĞIDAKİ IF KOŞULUNUN TÜRKÇE MEALİ :)
+     * MAVİ BÖLGE OKUDUK: KIRMIZI KÖŞEYİZ(bolge = KIRMIZI = 1) ve CEZA BIRAKACAĞIZ(nereye = CEZA_BIRAK = 0) --> bolge(1) != nereye(0)
+     * MAVİ BÖLGE OKUDUK: MAVİ KÖŞEYİZ(bolge = MAVI = 0) ve BİZİM TOPU BIRAKACAĞIZ(nereye = BIZIM_TOPU_BIRAK = 1) --> bolge(0) != nereye(1)
+     * KIRMIZI BÖLGE OKUDUK: KIRMIZI KÖŞEYİZ(bolge = KIRMIZI = 1) ve BİZİM TOPU BIRAKACAĞIZ(nereye = BIZIM_TOPU_BIRAK = 1) --> bolge(1) == nereye(1)
+     * KIRMIZI BÖLGE OKUDUK: MAVİ KÖŞEYİZ(bolge = MAVI = 0) ve CEZA BIRAKACAĞIZ(nereye = CEZA_BIRAK = 0) --> bolge(0) == nereye(0)
+     * GERİ KALAN HİÇBİR KOŞULDA IF'İN İÇİNE GİRİLİP PARK YAPILMAZ DUVAR TAKİBE DEVAM EDİLİR <3
+     */
+    if ( (sonuc < mavi_ust_limit && bolge != nereye) || (sonuc > kirmizi_alt_limit && bolge == nereye) )
     {
       dur(200);
       park(nereye);
@@ -224,13 +235,15 @@ void duvar_takip_otur()
   {
     dur(200);
     int sonuc = olcum();
-    if ( (sonuc < 55 && bolge == KIRMIZI) || (sonuc > 260 && bolge == MAVI) )
+    
+    if ( (sonuc < mavi_ust_limit && bolge == KIRMIZI) || (sonuc > kirmizi_alt_limit && bolge == MAVI) )
     {
       ileri(100);
       delay(150);
       dur(0);
-      while(1);
+      while(1); // OTURDUK BEKLİYORUZ
     }
+    
     while (digitalRead(sag_goz) == 0)
     {
       sol(100);
@@ -285,7 +298,7 @@ void park (byte nereye)
     sol(100);
     delay(300);
     dur(200);
-    ceza.write(120);
+    ceza.write(ceza_kapak_default + 120);
     delay(100);
     digitalWrite(ceza_tokatla_sinyal, HIGH);
     delay(500);
@@ -300,7 +313,7 @@ void park (byte nereye)
   }
   else
   {
-    ceza.write(0);
+    ceza.write(ceza_kapak_default);
   }
   duvarla_isim_var = 0;
 }
