@@ -21,7 +21,7 @@ float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
 
-int kirmizi_alt_limit = 270, mavi_ust_limit = 75, ceza_alt_limit = 150, ceza_ust_limit = 240;
+int kirmizi_alt_limit = 270, mavi_ust_limit = 75, ceza_alt_limit = 150, ceza_ust_limit = 230;
 
 // TOPLARI TOKATLAYAN VE CEZAYI TOKATLAYAN SERVOLARIN NORMAL DURUMLARI
 // ÖZELLİKLE tokat_default TOKATLAMA KODLARINDA DA KULLANILIYOR, BURADAN DEĞİŞTİRİLMESİ ÖNEMLİ
@@ -313,6 +313,40 @@ void sadece_ayikla()
 
         ceza_al();
         baslangic_ceza_aldik_mi = true;
+      }
+      else
+      {
+        Serial.print("KARARSIZ: ");
+        Serial.println(sonuc);
+      }
+    }
+    else
+    {
+      //Serial.println("BOŞŞ");
+    }
+}
+
+void kalibre_top_okuma()
+{
+    //NORMAL KOD
+    if (digitalRead(top_sensor) == 1)
+    {
+      int sonuc = olcum(); //OLCUM YAKLAŞIK 240 MİLİSANİYEDE TAMAMLANIYOR
+      if (sonuc > kirmizi_alt_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      {
+        Serial.print("KIRMIZI: ");
+        Serial.println(sonuc);
+
+      }
+      else if (sonuc < mavi_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      {
+        Serial.print("MAVİ: ");
+        Serial.println(sonuc);
+      }
+      else if (sonuc > ceza_alt_limit && sonuc < ceza_ust_limit && digitalRead(top_sensor) == 1) //TOKATLAYACAKSAK, OLCUM SIRASINDA TOPUN AĞIZDAN ÇIKMADIĞINI TEYİT ETMELİYİZ
+      {
+        Serial.print("CEZA: ");
+        Serial.println(sonuc);
       }
       else
       {

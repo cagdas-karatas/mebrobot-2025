@@ -43,7 +43,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 float kirmizi = 0, mavi = 0;
 int kirmizi_veriler[4] = { 0, 0, 0, 0 };
 int mavi_veriler[4] = { 0, 0, 0, 0 };
-int mavi_ust_limit = 55, kirmizi_alt_limit = 260;
+int mavi_ust_limit = 60, kirmizi_alt_limit = 300;
 byte bolge = 0, duvarla_isim_var = 0;
 
 byte bizim_kapak_default = 0, ceza_kapak_default = 0;
