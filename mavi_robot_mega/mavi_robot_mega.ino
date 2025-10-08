@@ -112,7 +112,7 @@ void setup() {
 
   Serial.begin(9600);
   while(digitalRead(sag_goz) == 0);
-  //basla();
+  basla();
 }
 
 void loop() {
@@ -162,13 +162,13 @@ void rastgele()
 {
   if (digitalRead(sol_goz) == 0)
   {
-    sag(100);
-    delay(500);
+    sag(80);
+    delay(600);
   }
   else if (digitalRead(sag_goz) == 0)
   {
-    sag(100);
-    delay(700);
+    sag(80);
+    delay(800);
   }
   else
   {
@@ -371,7 +371,7 @@ void basla()
   // İLERİ GİT (her iki motor ileri yönde döner)
   ileri(255); // ileri(byte hız)
 
-  delay(1000);  // 1 saniye ileri git
+  delay(800);  // 1 saniye ileri git
 
   // DUR
   dur(100); //dur(byte guc) -> guc ne kadar yüksekse o kadar sert fren yapar.
