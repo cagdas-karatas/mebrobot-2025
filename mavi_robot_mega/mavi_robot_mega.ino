@@ -238,8 +238,12 @@ void duvar_takip_otur()
     
     if ( (sonuc < mavi_ust_limit && bolge == KIRMIZI) || (sonuc > kirmizi_alt_limit && bolge == MAVI) )
     {
-      ileri(100);
-      delay(150);
+      ileri(80);
+      delay(250);
+      dur(0);
+      delay(100);
+      geri(80);
+      delay(200);
       dur(0);
       while(1); // OTURDUK BEKLİYORUZ
     }
